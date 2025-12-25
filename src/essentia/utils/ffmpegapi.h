@@ -47,6 +47,10 @@
 extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
+#include <libavutil/version.h>
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+#include <libavutil/channel_layout.h>
+#endif
 }
 
 // libav* versions for deprecated functions taken from (among other sources):
@@ -63,6 +67,24 @@ extern "C" {
 
 // useful aliases
 #define AVCODEC_AUDIO_DECODE4 AVCODEC_53_25_0
+
+#if LIBAVCODEC_VERSION_MAJOR >= 57
+#define ESSENTIA_FFMPEG_NEW_API 1
+#else
+#define ESSENTIA_FFMPEG_NEW_API 0
+#endif
+
+#if LIBAVFORMAT_VERSION_MAJOR >= 57
+#define ESSENTIA_FFMPEG_HAS_CODEC_PAR 1
+#else
+#define ESSENTIA_FFMPEG_HAS_CODEC_PAR 0
+#endif
+
+#if LIBAVUTIL_VERSION_MAJOR >= 57
+#define ESSENTIA_FFMPEG_HAS_CH_LAYOUT 1
+#else
+#define ESSENTIA_FFMPEG_HAS_CH_LAYOUT 0
+#endif
 
 
 // deprecated functions equivalences

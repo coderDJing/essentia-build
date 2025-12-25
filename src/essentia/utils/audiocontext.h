@@ -39,6 +39,10 @@ class AudioContext {
   AVStream* _avStream;
   AVFormatContext* _demuxCtx;
   AVCodecContext* _codecCtx;
+#if ESSENTIA_FFMPEG_NEW_API
+  AVFrame* _frame;
+  AVPacket* _packet;
+#endif
 
   int _outputBufSize; // (frame)size of output buffer
   int _inputBufSize;     // input buffer size

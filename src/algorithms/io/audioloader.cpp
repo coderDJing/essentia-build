@@ -26,6 +26,16 @@ using namespace std;
 namespace essentia {
 namespace streaming {
 
+namespace {
+int getAudioCtxChannels(const AVCodecContext* ctx) {
+#if ESSENTIA_FFMPEG_HAS_CH_LAYOUT
+    return ctx->ch_layout.nb_channels;
+#else
+    return ctx->channels;
+#endif
+}
+}
+
 const char* AudioLoader::name = "AudioLoader";
 const char* AudioLoader::description = DOC("This algorithm loads the single audio stream contained in the given audio or video file, as well as the samplerate and the number of channels. Supported formats are all those supported by the ffmpeg library, which is, virtually everything.\n"
 "\n"
@@ -51,7 +61,7 @@ AudioLoader::~AudioLoader() {
     av_freep(&_buffer);
 
 #if LIBAVCODEC_VERSION_INT >= AVCODEC_AUDIO_DECODE4
-    av_freep(&_decodedFrame);
+    av_frame_free(&_decodedFrame);
 #endif
 
 #if !HAVE_SWRESAMPLE
@@ -98,7 +108,11 @@ void AudioLoader::openAudioFile(const string& filename) {
     // Check that we have only 1 audio stream in the file
     int nAudioStreams = 0;
     for (int i=0; i<(int)_demuxCtx->nb_streams; i++) {
+#if ESSENTIA_FFMPEG_HAS_CODEC_PAR
+        if (_demuxCtx->streams[i]->codecpar->codec_type == AVMEDIA_TYPE_AUDIO) {
+#else
         if (_demuxCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+#endif
             _streamIdx = i;
             nAudioStreams++;
         }
@@ -108,7 +122,18 @@ void AudioLoader::openAudioFile(const string& filename) {
     }
 
     // Load corresponding audio codec
+#if ESSENTIA_FFMPEG_HAS_CODEC_PAR
+    _audioCtx = avcodec_alloc_context3(NULL);
+    if (!_audioCtx) {
+        throw EssentiaException("AudioLoader: Could not allocate codec context");
+    }
+    if (avcodec_parameters_to_context(_audioCtx, _demuxCtx->streams[_streamIdx]->codecpar) < 0) {
+        avcodec_free_context(&_audioCtx);
+        throw EssentiaException("AudioLoader: Could not copy codec parameters");
+    }
+#else
     _audioCtx = _demuxCtx->streams[_streamIdx]->codec;
+#endif
 
     _audioCodec = avcodec_find_decoder(_audioCtx->codec_id);
 
@@ -116,23 +141,54 @@ void AudioLoader::openAudioFile(const string& filename) {
         throw EssentiaException("AudioLoader: Unsupported codec!");
     }
 
-    if (avcodec_open2(_audioCtx, _audioCodec, NULL) < 0) {
+    if (avcodec_open2(_audioCtx, const_cast<AVCodec*>(_audioCodec), NULL) < 0) {
         throw EssentiaException("AudioLoader: Unable to instantiate codec...");
     }
 
+    int nChannels = getAudioCtxChannels(_audioCtx);
     if (_audioCtx->sample_fmt != AV_SAMPLE_FMT_S16) {
 
 #if HAVE_SWRESAMPLE
 
         E_DEBUG(EAlgorithm, "AudioLoader: using sample format conversion from libswresample");
 
+#if ESSENTIA_FFMPEG_HAS_CH_LAYOUT
+        AVChannelLayout srcLayout;
+        if (_audioCtx->ch_layout.nb_channels > 0) {
+            av_channel_layout_copy(&srcLayout, &_audioCtx->ch_layout);
+        }
+        else {
+            av_channel_layout_default(&srcLayout, nChannels);
+        }
+        AVChannelLayout dstLayout;
+        av_channel_layout_default(&dstLayout, nChannels);
+
+        if (swr_alloc_set_opts2(&_convertCtx,
+                                &dstLayout, AV_SAMPLE_FMT_S16, _audioCtx->sample_rate,
+                                &srcLayout, _audioCtx->sample_fmt, _audioCtx->sample_rate,
+                                0, NULL) < 0) {
+            av_channel_layout_uninit(&srcLayout);
+            av_channel_layout_uninit(&dstLayout);
+            throw EssentiaException("Could not allocate swresample context");
+        }
+
+        av_channel_layout_uninit(&srcLayout);
+        av_channel_layout_uninit(&dstLayout);
+#else
         // No samplerate conversion yet, only format
-        int64_t layout = av_get_default_channel_layout(_audioCtx->channels);
+        int64_t layout = _audioCtx->channel_layout;
+        if (!layout) {
+            layout = av_get_default_channel_layout(nChannels);
+        }
 
         _convertCtx = swr_alloc_set_opts(_convertCtx,
                                          layout, AV_SAMPLE_FMT_S16,     _audioCtx->sample_rate,
                                          layout, _audioCtx->sample_fmt, _audioCtx->sample_rate,
                                          0, NULL);
+        if (!_convertCtx) {
+            throw EssentiaException("Could not allocate swresample context");
+        }
+#endif
 
         if (swr_init(_convertCtx) < 0) {
             throw EssentiaException("Could not initialize swresample context");
@@ -165,21 +221,25 @@ void AudioLoader::openAudioFile(const string& filename) {
     av_init_packet(&_packet);
 
 #if LIBAVCODEC_VERSION_INT >= AVCODEC_AUDIO_DECODE4
-    _decodedFrame = avcodec_alloc_frame();
+    _decodedFrame = av_frame_alloc();
     if (!_decodedFrame) {
         throw EssentiaException("Could not allocate audio frame");
     }
 #endif
 
 
-#if LIBAVCODEC_VERSION_INT < AVCODEC_51_28_0
-    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio() function");
-#elif LIBAVCODEC_VERSION_INT < AVCODEC_52_47_0
-    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio2() function");
-#elif LIBAVCODEC_VERSION_INT < AVCODEC_AUDIO_DECODE4
-    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio3() function");
+#if ESSENTIA_FFMPEG_NEW_API
+    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_send_packet()/receive_frame() functions");
 #else
+#  if LIBAVCODEC_VERSION_INT < AVCODEC_51_28_0
+    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio() function");
+#  elif LIBAVCODEC_VERSION_INT < AVCODEC_52_47_0
+    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio2() function");
+#  elif LIBAVCODEC_VERSION_INT < AVCODEC_AUDIO_DECODE4
+    E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio3() function");
+#  else
     E_DEBUG(EAlgorithm, "AudioLoader: using ffmpeg avcodec_decode_audio4() function");
+#  endif
 #endif
 
 }
@@ -195,7 +255,13 @@ void AudioLoader::closeAudioFile() {
 #endif
 
     // Close the codec
+#if ESSENTIA_FFMPEG_HAS_CODEC_PAR
+    if (_audioCtx) {
+        avcodec_free_context(&_audioCtx);
+    }
+#else
     avcodec_close(_audioCtx);
+#endif
 
     // Close the audio file
     avformat_close_input(&_demuxCtx);
@@ -241,6 +307,9 @@ AlgorithmStatus AudioLoader::process() {
 
     decodePacket();
     copyFFmpegOutput();
+#if ESSENTIA_FFMPEG_NEW_API
+    av_packet_unref(&_packet);
+#endif
 
     return OK;
 }
@@ -251,6 +320,90 @@ int AudioLoader::decode_audio_frame(AVCodecContext* audioCtx,
                                     int* outputSize,
                                     AVPacket* packet) {
 
+#if ESSENTIA_FFMPEG_NEW_API
+    int totalWritten = 0;
+    int outCapacity = *outputSize;
+    int ret = 0;
+
+    if (packet && (packet->data || packet->size > 0)) {
+        ret = avcodec_send_packet(audioCtx, packet);
+    }
+    else {
+        ret = avcodec_send_packet(audioCtx, NULL);
+    }
+
+    if (ret < 0 && ret != AVERROR_EOF) {
+        return ret;
+    }
+
+    while (true) {
+        ret = avcodec_receive_frame(audioCtx, _decodedFrame);
+        if (ret == AVERROR(EAGAIN) || ret == AVERROR_EOF) {
+            break;
+        }
+        if (ret < 0) {
+            return ret;
+        }
+
+        int nChannels = getAudioCtxChannels(audioCtx);
+        int nsamples = _decodedFrame->nb_samples;
+        int inputDataSize = av_samples_get_buffer_size(NULL, nChannels, nsamples,
+                                                       audioCtx->sample_fmt, 1);
+        if (inputDataSize < 0) {
+            return inputDataSize;
+        }
+
+#  if HAVE_SWRESAMPLE
+        if (_convertCtx) {
+            int maxOutSamples = (outCapacity - totalWritten) / (2 /*sizeof(S16)*/ * nChannels);
+            if (maxOutSamples <= 0) {
+                av_frame_unref(_decodedFrame);
+                break;
+            }
+
+            uint8_t* outPtr = reinterpret_cast<uint8_t*>(output) + totalWritten;
+            uint8_t* outPtrs[1] = { outPtr };
+            int converted = swr_convert(_convertCtx,
+                                        outPtrs, maxOutSamples,
+                                        (const uint8_t**)_decodedFrame->data, nsamples);
+            if (converted < 0) {
+                ostringstream msg;
+                msg << "AudioLoader: Error converting"
+                    << " from " << av_get_sample_fmt_name(_audioCtx->sample_fmt)
+                    << " to "   << av_get_sample_fmt_name(AV_SAMPLE_FMT_S16);
+                throw EssentiaException(msg);
+            }
+            totalWritten += converted * (2 /*sizeof(S16)*/ * nChannels);
+        }
+        else {
+            if (totalWritten + inputDataSize > outCapacity) {
+                av_frame_unref(_decodedFrame);
+                break;
+            }
+            memcpy(reinterpret_cast<uint8_t*>(output) + totalWritten,
+                   _decodedFrame->data[0], inputDataSize);
+            totalWritten += inputDataSize;
+        }
+#  else
+        if (totalWritten + inputDataSize > outCapacity) {
+            av_frame_unref(_decodedFrame);
+            break;
+        }
+        memcpy(reinterpret_cast<uint8_t*>(output) + totalWritten,
+               _decodedFrame->data[0], inputDataSize);
+        totalWritten += inputDataSize;
+#  endif
+
+        av_frame_unref(_decodedFrame);
+    }
+
+    *outputSize = totalWritten;
+    if (packet) {
+        return packet->size;
+    }
+    return 0;
+
+#else
 
 #if LIBAVCODEC_VERSION_INT < AVCODEC_51_28_0
 
@@ -319,6 +472,8 @@ int AudioLoader::decode_audio_frame(AVCodecContext* audioCtx,
 #endif
 
     return len;
+
+#endif
 }
 
 
@@ -371,7 +526,7 @@ int AudioLoader::decodePacket() {
         // only print error msg when file is not an mp3, because mp3 streams can have tag
         // frames (id3v2?) which libavcodec tries to read as audio anyway, and we don't want
         // to print an error message for that...
-        if (_audioCtx->codec_id == CODEC_ID_MP3) {
+        if (_audioCtx->codec_id == AV_CODEC_ID_MP3) {
             E_DEBUG(EAlgorithm, "AudioLoader: invalid frame, probably an mp3 tag frame, skipping it");
         }
         else {
@@ -472,7 +627,7 @@ void AudioLoader::reset() {
     closeAudioFile();
     openAudioFile(filename);
 
-    pushChannelsSampleRateInfo(_audioCtx->channels, _audioCtx->sample_rate);
+    pushChannelsSampleRateInfo(getAudioCtxChannels(_audioCtx), _audioCtx->sample_rate);
 }
 
 } // namespace streaming

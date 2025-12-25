@@ -47,7 +47,7 @@ class AudioLoader : public Algorithm {
 
   AVFormatContext* _demuxCtx;
   AVCodecContext* _audioCtx;
-  AVCodec* _audioCodec;
+  const AVCodec* _audioCodec;
   AVPacket _packet;
 
 #if LIBAVCODEC_VERSION_INT >= AVCODEC_AUDIO_DECODE4
@@ -97,7 +97,9 @@ class AudioLoader : public Algorithm {
     _audio.setBufferType(BufferUsage::forLargeAudioStream);
 
     // Register all formats and codecs
+#if LIBAVFORMAT_VERSION_MAJOR < 58
     av_register_all();
+#endif
 
     // use av_malloc, because we _need_ the buffer to be 16-byte aligned
     _buffer = (int16_t*)av_malloc(FFMPEG_BUFFER_SIZE * sizeof(int16_t));
