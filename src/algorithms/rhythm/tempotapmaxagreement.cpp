@@ -25,6 +25,9 @@ const char* TempoTapMaxAgreement::description = DOC("This algorithm estimates be
 "  F. Gouyon, \"Selective sampling for beat tracking evaluation,\" IEEE\n" 
 "  Transactions on Audio, Speech, and Language Processing, vol. 13, no. 9,\n"
 "  pp. 2539-2548, 2012.\n");
+const Real TempoTapMaxAgreement::_minTickTime = 5.;
+const Real TempoTapMaxAgreement::_phaseThreshold = 0.175;
+const Real TempoTapMaxAgreement::_periodThreshold = 0.175;
 
 
 void TempoTapMaxAgreement::configure() {

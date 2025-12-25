@@ -59,6 +59,8 @@ Notes:
 
   * The workflow builds with `--with-examples` and bundles required DLL/dylib
     files next to the CLI binary in the release asset.
+  * The fork keeps C++17 compatibility fixes needed by MSYS2 g++ for non-integral
+    static constants used in tempo tap headers.
 
 
 Versions
