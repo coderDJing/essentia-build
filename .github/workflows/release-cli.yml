@@ -66,6 +66,11 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          export PATH="/mingw64/bin:$PATH"
+          export CC="gcc"
+          export CXX="g++"
+          export AR="ar"
+          export RANLIB="ranlib"
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
           python waf configure --with-examples --mode=release
           python waf
