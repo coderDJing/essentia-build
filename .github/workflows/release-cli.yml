@@ -70,17 +70,20 @@ jobs:
         run: |
           set -euo pipefail
           pacman -S --noconfirm --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
-          command -v g++
-          g++ --version
           export MSYSTEM="MINGW64"
           export PATH="/mingw64/bin:/usr/bin:$PATH"
-          export CC="/mingw64/bin/gcc"
-          export CXX="/mingw64/bin/g++"
-          export AR="/mingw64/bin/ar"
-          export RANLIB="/mingw64/bin/ranlib"
+          command -v g++
+          g++ --version
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
-          /mingw64/bin/python waf configure --with-examples --mode=release --check-c-compiler=gcc --check-cxx-compiler=g++
-          /mingw64/bin/python waf
+          win_path="$(cygpath -w /mingw64/bin);$(cygpath -w /usr/bin)"
+          win_gcc="$(cygpath -w /mingw64/bin/gcc.exe)"
+          win_gxx="$(cygpath -w /mingw64/bin/g++.exe)"
+          win_ar="$(cygpath -w /mingw64/bin/ar.exe)"
+          win_ranlib="$(cygpath -w /mingw64/bin/ranlib.exe)"
+          env PATH="$win_path" CC="$win_gcc" CXX="$win_gxx" AR="$win_ar" RANLIB="$win_ranlib" \
+            /mingw64/bin/python waf configure --with-examples --mode=release --check-c-compiler=gcc --check-cxx-compiler=g++
+          env PATH="$win_path" CC="$win_gcc" CXX="$win_gxx" AR="$win_ar" RANLIB="$win_ranlib" \
+            /mingw64/bin/python waf
 
       - name: Stage artifacts (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
