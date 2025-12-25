@@ -36,6 +36,31 @@ Quick start
 Quick start using python: http://essentia.upf.edu/documentation/python_tutorial.html
 
 
+CLI Releases (GitHub Actions)
+-----------------------------
+
+This fork includes a GitHub Actions workflow that builds the streaming extractor CLI for:
+
+  * Windows x64 (MSYS2 + mingw-w64)
+  * macOS x86_64 (macos-13)
+  * macOS arm64 (macos-14)
+
+Release flow:
+
+  * Create and push a tag (e.g. v2.0.1).
+  * The `release-cli` workflow builds `streaming_extractor` and packages it as
+    `essentia_streaming_extractor_music` together with `src/examples/profiles`.
+
+Manual runs:
+
+  * Trigger `release-cli` and provide an existing tag.
+
+Notes:
+
+  * The workflow builds with `--with-examples` and bundles required DLL/dylib
+    files next to the CLI binary in the release asset.
+
+
 Versions
 --------
 

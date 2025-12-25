@@ -1,0 +1,248 @@
+name: release-cli
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to release (e.g. v2.0.1)"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: build-${{ matrix.target }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            target: windows-x64
+            msystem: MINGW64
+          - os: macos-13
+            target: macos-x86_64
+          - os: macos-14
+            target: macos-arm64
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
+
+      - name: Resolve tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
+          else
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          fi
+
+      - name: Setup MSYS2
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: ${{ matrix.msystem }}
+          update: true
+          install: >-
+            mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-python
+            mingw-w64-x86_64-pkgconf
+            mingw-w64-x86_64-ffmpeg
+            mingw-w64-x86_64-fftw
+            mingw-w64-x86_64-libsamplerate
+            mingw-w64-x86_64-libyaml
+            mingw-w64-x86_64-taglib
+
+      - name: Build (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
+          python waf configure --with-examples --mode=release
+          python waf
+
+      - name: Stage artifacts (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          dist_dir="dist/${{ matrix.target }}"
+          exe_path="build/src/examples/streaming_extractor.exe"
+          mkdir -p "$dist_dir"
+          cp "$exe_path" "$dist_dir/essentia_streaming_extractor_music.exe"
+          cp -R "src/examples/profiles" "$dist_dir/"
+          cp "COPYING.txt" "$dist_dir/"
+
+          system_regex='^(KERNEL32\.dll|KERNELBASE\.dll|USER32\.dll|ADVAPI32\.dll|SHELL32\.dll|WS2_32\.dll|OLE32\.dll|OLEAUT32\.dll|GDI32\.dll|IMM32\.dll|COMDLG32\.dll|WINMM\.dll|VERSION\.dll|SHLWAPI\.dll|SETUPAPI\.dll|PSAPI\.dll|CRYPT32\.dll|BCRYPT\.dll|BCRYPTPRIMITIVES\.dll|SECUR32\.dll|IPHLPAPI\.dll|UXTHEME\.dll|api-ms-win-.*\.dll|ucrtbase\.dll|msvcrt\.dll)$'
+          queue=("$exe_path")
+          processed=()
+
+          while [ "${#queue[@]}" -gt 0 ]; do
+            current="${queue[0]}"
+            queue=("${queue[@]:1}")
+            processed+=("$current")
+            deps="$(objdump -p "$current" | awk '/DLL Name:/ {print $3}')"
+            for dep in $deps; do
+              if echo "$dep" | grep -Eiq "$system_regex"; then
+                continue
+              fi
+              dep_path=""
+              if [ -f "$dist_dir/$dep" ]; then
+                dep_path="$dist_dir/$dep"
+              else
+                for dir in "/mingw64/bin" "/mingw64/lib"; do
+                  if [ -f "$dir/$dep" ]; then
+                    cp "$dir/$dep" "$dist_dir/"
+                    dep_path="$dist_dir/$dep"
+                    break
+                  fi
+                done
+              fi
+              if [ -z "$dep_path" ]; then
+                echo "Missing dependency: $dep"
+                exit 1
+              fi
+              already=0
+              for seen in "${processed[@]}"; do
+                if [ "$seen" = "$dep_path" ]; then
+                  already=1
+                  break
+                fi
+              done
+              if [ "$already" -eq 0 ]; then
+                queue+=("$dep_path")
+              fi
+            done
+          done
+
+      - name: Install deps (macOS)
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          brew install ffmpeg fftw libsamplerate libyaml taglib pkg-config
+
+      - name: Build (macOS)
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig"
+          python3 waf configure --with-examples --mode=release
+          python3 waf
+
+      - name: Stage artifacts (macOS)
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          dist_dir="dist/${{ matrix.target }}"
+          bin_path="build/src/examples/streaming_extractor"
+          target_bin="$dist_dir/essentia_streaming_extractor_music"
+          brew_prefix="$(brew --prefix)"
+          mkdir -p "$dist_dir"
+          cp "$bin_path" "$target_bin"
+          cp -R "src/examples/profiles" "$dist_dir/"
+          cp "COPYING.txt" "$dist_dir/"
+
+          resolve_dep() {
+            local dep="$1"
+            if [[ "$dep" == @* ]]; then
+              local base
+              base="$(basename "$dep")"
+              if [ -f "$brew_prefix/lib/$base" ]; then
+                echo "$brew_prefix/lib/$base"
+                return
+              fi
+              local found
+              found="$(/usr/bin/find "$brew_prefix/opt" -path "*/lib/$base" -print -quit)"
+              if [ -n "$found" ]; then
+                echo "$found"
+                return
+              fi
+            fi
+            echo "$dep"
+          }
+
+          list_deps() {
+            otool -L "$1" | awk 'NR>1 {print $1}' | grep -v '^/usr/lib/' | grep -v '^/System/Library/'
+          }
+
+          queue=("$target_bin")
+          processed=()
+
+          while [ "${#queue[@]}" -gt 0 ]; do
+            current="${queue[0]}"
+            queue=("${queue[@]:1}")
+            processed+=("$current")
+            deps="$(list_deps "$current")"
+            for dep in $deps; do
+              resolved="$(resolve_dep "$dep")"
+              base="$(basename "$resolved")"
+              dest="$dist_dir/$base"
+              if [ ! -f "$resolved" ]; then
+                echo "Missing dependency: $dep"
+                exit 1
+              fi
+              if [ ! -f "$dest" ]; then
+                cp -L "$resolved" "$dest"
+                install_name_tool -id "@executable_path/$base" "$dest" || true
+              fi
+              install_name_tool -change "$dep" "@executable_path/$base" "$current" || true
+              already=0
+              for seen in "${processed[@]}"; do
+                if [ "$seen" = "$dest" ]; then
+                  already=1
+                  break
+                fi
+              done
+              if [ "$already" -eq 0 ]; then
+                queue+=("$dest")
+              fi
+            done
+          done
+
+      - name: Create archive
+        shell: bash
+        run: |
+          set -euo pipefail
+          tar -czf "essentia-cli-${TAG_NAME}-${{ matrix.target }}.tar.gz" -C "dist" "${{ matrix.target }}"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: essentia-cli-${{ matrix.target }}
+          path: essentia-cli-${{ env.TAG_NAME }}-${{ matrix.target }}.tar.gz
+
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Resolve tag
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "TAG_NAME=${{ github.event.inputs.tag }}" >> "$GITHUB_ENV"
+          else
+            echo "TAG_NAME=${GITHUB_REF#refs/tags/}" >> "$GITHUB_ENV"
+          fi
+
+      - uses: actions/download-artifact@v4
+        with:
+          path: dist
+
+      - name: Publish release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ env.TAG_NAME }}
+          files: dist/**/essentia-cli-${{ env.TAG_NAME }}-*.tar.gz
