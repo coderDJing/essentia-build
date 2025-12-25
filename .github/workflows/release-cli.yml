@@ -53,6 +53,8 @@ jobs:
           update: true
           install: >-
             mingw-w64-x86_64-toolchain
+            mingw-w64-x86_64-gcc
+            mingw-w64-x86_64-binutils
             mingw-w64-x86_64-python
             mingw-w64-x86_64-pkgconf
             mingw-w64-x86_64-ffmpeg
@@ -66,14 +68,15 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
-          export PATH="/mingw64/bin:$PATH"
-          export CC="gcc"
-          export CXX="g++"
-          export AR="ar"
-          export RANLIB="ranlib"
+          export MSYSTEM="MINGW64"
+          export PATH="/mingw64/bin:/usr/bin:$PATH"
+          export CC="/mingw64/bin/gcc"
+          export CXX="/mingw64/bin/g++"
+          export AR="/mingw64/bin/ar"
+          export RANLIB="/mingw64/bin/ranlib"
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
-          python waf configure --with-examples --mode=release
-          python waf
+          /mingw64/bin/python waf configure --with-examples --mode=release --check-c-compiler=gcc --check-cxx-compiler=g++
+          /mingw64/bin/python waf
 
       - name: Stage artifacts (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
