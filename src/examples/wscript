@@ -49,7 +49,7 @@ def adjust(objs, path):
 
 
 def build(ctx):
-    print('→ building from ' + ctx.path.abspath())
+    print('-> building from ' + ctx.path.abspath())
 
     if ctx.env.WITH_EXAMPLES:
         def build_example(prefix, prog_name, other=None):

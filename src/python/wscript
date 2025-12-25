@@ -18,7 +18,7 @@ def adjust(objs, path):
     return [ '%s/%s' % (path, obj) for obj in objs ]
 
 def build(ctx):
-    print('→ building from ' + ctx.path.abspath())
+    print('-> building from ' + ctx.path.abspath())
 
     # gets the path from the active virtualenv
     PYLIB = distutils.sysconfig.get_python_lib()

@@ -27,7 +27,7 @@ def options(ctx):
 
 
 def configure(ctx):
-    print('→ configuring the project in ' + ctx.path.abspath())
+    print('-> configuring the project in ' + ctx.path.abspath())
 
     ctx.env.WITH_CPPTESTS = ctx.options.WITH_CPPTESTS
 
@@ -38,11 +38,11 @@ def configure(ctx):
     #ctx.env.CXXFLAGS += [ '-Werror' ]
 
     if ctx.options.MODE == 'debug':
-        print ('→ Building in debug mode')
+        print ('-> Building in debug mode')
         ctx.env.CXXFLAGS += [ '-g' ]
 
     elif ctx.options.MODE == 'release':
-        print ('→ Building in release mode')
+        print ('-> Building in release mode')
         ctx.env.CXXFLAGS += [ '-O2' ] # '-march=native' ] # '-msse3', '-mfpmath=sse' ]
 
     else:
@@ -80,7 +80,7 @@ def adjust(objs, path):
     return [ '%s/%s' % (path, obj) for obj in objs ]
 
 def build(ctx):
-    print('→ building from ' + ctx.path.abspath())
+    print('-> building from ' + ctx.path.abspath())
     ctx.recurse('src')
 
     if ctx.env.WITH_CPPTESTS:
