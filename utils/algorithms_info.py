@@ -220,16 +220,16 @@ def get_all_algorithms(algo_dir, root_dir=None):
 
                 # 1- if a file is in the algo dir, it *must* be an algorithm (now a warning)
                 if not has_standard and not has_streaming:
-                    print 'WARNING: file "%s" does not seem to contain an algorithm.' % filename
+                    print('WARNING: file "%s" does not seem to contain an algorithm.' % filename)
                     continue
                     #sys.exit(1)
 
                 # 2- if an algo has both standard & streaming form in the same file,
                 #    they must have the same name
                 if has_standard and has_streaming and algo != salgo:
-                    print 'ERROR: file "%s" contains both standard and streaming'\
-                          'version of the algorithm, but they have different '\
-                          'names: %s != %s.' %(filename, algo, salgo)
+                    print('ERROR: file "%s" contains both standard and streaming '
+                          'version of the algorithm, but they have different '
+                          'names: %s != %s.' % (filename, algo, salgo))
                     sys.exit(1)
 
                 # 3- if algo is only available as streaming, use salgo as algo name
@@ -260,7 +260,7 @@ def get_all_algorithms(algo_dir, root_dir=None):
                                      'parameters': parameters
                                      }
             except:
-                print 'Error while trying to parse file "%s"' % filename
+                print('Error while trying to parse file "%s"' % filename)
                 raise
 
     return algorithms
@@ -311,7 +311,7 @@ if __name__ == '__main__':
     algos = get_all_algorithms(algo_dir)
 
     for name, algo in algos.items():
-        print name, ':\n',
+        print('%s:\n' % name)
         for attr in algo:
-            print '  %s: %s' % (attr, algo[attr])
-        print
+            print('  %s: %s' % (attr, algo[attr]))
+        print('')
