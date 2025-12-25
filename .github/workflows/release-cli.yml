@@ -51,6 +51,7 @@ jobs:
         with:
           msystem: ${{ matrix.msystem }}
           update: true
+          path-type: minimal
           install: >-
             mingw-w64-x86_64-toolchain
             mingw-w64-x86_64-gcc
@@ -68,6 +69,9 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          pacman -S --noconfirm --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
+          command -v g++
+          g++ --version
           export MSYSTEM="MINGW64"
           export PATH="/mingw64/bin:/usr/bin:$PATH"
           export CC="/mingw64/bin/gcc"
