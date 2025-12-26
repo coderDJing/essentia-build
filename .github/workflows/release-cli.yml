@@ -77,6 +77,21 @@ jobs:
           export PATH="/mingw64/bin:/usr/bin:$PATH"
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
           git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
+          qt_lib_dir="$(qmake -query QT_INSTALL_LIBS)"
+          for lib in "$qt_lib_dir"/libQt5*.dll.a "$qt_lib_dir"/libQt5*.a; do
+            if [ ! -f "$lib" ]; then
+              continue
+            fi
+            base="$(basename "$lib")"
+            base="${base%.dll.a}"
+            base="${base%.a}"
+            base_no_prefix="${base#lib}"
+            for name in "$base" "$base_no_prefix"; do
+              if [ ! -f "$qt_lib_dir/${name}.lib" ]; then
+                cp "$lib" "$qt_lib_dir/${name}.lib"
+              fi
+            done
+          done
           python - <<'PY'
           from pathlib import Path
           path = Path("gaia/wscript")
