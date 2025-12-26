@@ -21,6 +21,7 @@
 #include <essentia/essentiamath.h>
 #include <essentia/streaming/algorithms/poolstorage.h>
 #include <essentia/essentiautil.h>
+#include <essentia/stringutil.h>
 #include <essentia/scheduler/network.h>
 
 // helper functions
@@ -53,6 +54,11 @@ void computeHighlevel(Pool& pool, const Pool& options, const string& nspace = ""
 Pool computeAggregation(Pool& pool, const Pool& options, int segments=0);
 void addSVMDescriptors(Pool& pool);
 void outputToFile(Pool& pool, const string& outputFilename, const Pool& options);
+
+static bool hasSuffix(const string& value, const string& suffix) {
+  if (value.size() < suffix.size()) return false;
+  return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
 
 void usage() {
     cout << "Error: wrong number of arguments" << endl;
@@ -95,6 +101,12 @@ int main(int argc, char* argv[]) {
 
   // set configuration from file or otherwise use default settings:
   setOptions(options, profileFilename);
+  string outputLower = toLower(outputFilename);
+  if (hasSuffix(outputLower, ".json")) {
+    options.set("outputJSON", true);
+  } else if (hasSuffix(outputLower, ".yaml") || hasSuffix(outputLower, ".yml")) {
+    options.set("outputJSON", false);
+  }
 
   // pool for storing results
   Pool neqloudPool; // non equal loudness pool

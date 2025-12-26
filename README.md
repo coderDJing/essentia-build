@@ -59,6 +59,8 @@ Notes:
 
   * The workflow builds with `--with-examples` and bundles required DLL/dylib
     files next to the CLI binary in the release asset.
+  * `streaming_extractor` auto-selects output format by filename extension:
+    `.json` emits JSON; `.yaml`/`.yml` emits YAML.
   * macOS packaging installs `mbedtls` to bundle `libmbedcrypto.16.dylib` for
     FFmpeg dependency resolution.
   * The fork keeps C++17 compatibility fixes needed by MSYS2 g++ for non-integral
