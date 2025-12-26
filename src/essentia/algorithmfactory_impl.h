@@ -23,6 +23,9 @@
 namespace essentia {
 
 template <typename BaseAlgorithm>
+EssentiaFactory<BaseAlgorithm>* EssentiaFactory<BaseAlgorithm>::_instance = 0;
+
+template <typename BaseAlgorithm>
 EssentiaFactory<BaseAlgorithm>& EssentiaFactory<BaseAlgorithm>::instance() {
   if (!_instance) {
     throw EssentiaException("You haven't initialized the factory yet... Please do it now!");

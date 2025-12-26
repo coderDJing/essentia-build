@@ -67,9 +67,6 @@ bool isInitialized() {
   return _initialized;
 }
 
-template<> standard::AlgorithmFactory* standard::AlgorithmFactory::_instance = 0;
-template<> streaming::AlgorithmFactory* streaming::AlgorithmFactory::_instance = 0;
-
 EssentiaMap<string,string> * TypeMap::_typeMap = 0;
 
 
