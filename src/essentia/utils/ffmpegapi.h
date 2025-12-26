@@ -114,6 +114,8 @@ extern "C" {
 #ifndef AV_INPUT_BUFFER_MIN_SIZE
 #  ifdef FF_MIN_BUFFER_SIZE
 #    define AV_INPUT_BUFFER_MIN_SIZE FF_MIN_BUFFER_SIZE
+#  else
+#    define AV_INPUT_BUFFER_MIN_SIZE 16384
 #  endif
 #endif
 
