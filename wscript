@@ -63,7 +63,7 @@ def configure(ctx):
 
 
         ctx.env.DEFINES   += [ 'GTEST_HAS_TR1_TUPLE=0' ]
-        ctx.env.CXXFLAGS = [ '-stdlib=libc++', '-std=c++11', '-Wno-gnu' ]
+        ctx.env.CXXFLAGS = [ '-stdlib=libc++', '-std=c++14', '-Wno-gnu' ]
         ctx.env.LINKFLAGS = [ '-stdlib=libc++' ]
         # for defining static const variables in header
         ctx.env.CXXFLAGS += [ '-Wno-static-float-init' ]
