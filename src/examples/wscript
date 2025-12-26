@@ -135,7 +135,7 @@ def build(ctx):
 
         ctx.program(source = ctx.path.ant_glob(' '.join(freesound_files)),
                         target = 'streaming_extractor_freesound',
-                        includes = [ '.', '..' ,'../..'],
+                        includes = [ '.', '..' ],
                         use      = 'essentia ' + ctx.env.USES,
                         install_path = None)
 

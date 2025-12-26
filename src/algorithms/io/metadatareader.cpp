@@ -47,9 +47,9 @@ string fixInvalidUTF8(const string& str) {
     }
     else if (c < 160) { // control character
       if (c2 == 128) { // fix microsoft mess, add euro
-        fixed += 226;
-        fixed += 130;
-        fixed += 172;
+        fixed.push_back(static_cast<char>(0xE2));
+        fixed.push_back(static_cast<char>(0x82));
+        fixed.push_back(static_cast<char>(0xAC));
       }
       if (c2 == 133) { // fix IBM mess, add NEL = \n\r
         fixed += 10;
@@ -109,12 +109,9 @@ string fixInvalidUTF8(const string& str) {
         fixed += c-64;
       }
     } 
-    else if(c < 256) { // invalid utf8, converting ascii
+    else { // invalid utf8, converting ascii
       fixed += (unsigned char)195;
       fixed += c-64;
-    }
-    else {
-      // something weird happend: byte should not have more than 256 values 
     }
   }
   return fixed;
