@@ -104,31 +104,30 @@ jobs:
           path.write_text(text.replace(guard, ""))
           text = path.read_text()
           if "elif sys.platform == 'darwin':" in text and "windows fallback for pkg-config" not in text:
-              insert = """
-    else:
-        # windows fallback for pkg-config
-        opts = { 'prefix': prefix,
-             'qtlibdir': '/mingw64/lib',
-             'qtincludedir': '-I' + ' -I'.join(conf.env['INCLUDES_QT5CORE']),
-             'version': VERSION,
-             'tbblib': tbblib,
-             }
-
-        pcfile = '''prefix=%(prefix)s
-        libdir=${prefix}/lib
-        includedir=${prefix}/include
-        qtlibdir=%(qtlibdir)s
-        qtincludes=%(qtincludedir)s
-
-        Name: libgaia2
-        Description: A library for doing similarity in semimetric spaces
-        Version: %(version)s
-        Requires.private: eigen3
-        Libs: -L${libdir} -L${qtlibdir} -lgaia2 -lQt5Core -lQt5Concurrent -lyaml %(tbblib)s
-        Cflags: -I${includedir} ${qtincludes}
-        ''' % opts
-
-"""
+              insert = (
+                  "\n    else:\n"
+                  "        # windows fallback for pkg-config\n"
+                  "        opts = { 'prefix': prefix,\n"
+                  "             'qtlibdir': '/mingw64/lib',\n"
+                  "             'qtincludedir': '-I' + ' -I'.join(conf.env['INCLUDES_QT5CORE']),\n"
+                  "             'version': VERSION,\n"
+                  "             'tbblib': tbblib,\n"
+                  "             }\n"
+                  "\n"
+                  "        pcfile = '''prefix=%(prefix)s\n"
+                  "        libdir=${prefix}/lib\n"
+                  "        includedir=${prefix}/include\n"
+                  "        qtlibdir=%(qtlibdir)s\n"
+                  "        qtincludes=%(qtincludedir)s\n"
+                  "\n"
+                  "        Name: libgaia2\n"
+                  "        Description: A library for doing similarity in semimetric spaces\n"
+                  "        Version: %(version)s\n"
+                  "        Requires.private: eigen3\n"
+                  "        Libs: -L${libdir} -L${qtlibdir} -lgaia2 -lQt5Core -lQt5Concurrent -lyaml %(tbblib)s\n"
+                  "        Cflags: -I${includedir} ${qtincludes}\n"
+                  "        ''' % opts\n\n"
+              )
               marker = "\n\n    pcfile = '\\n'.join([ l.strip() for l in pcfile.split('\\n') ])\n"
               if marker not in text:
                   raise SystemExit("gaia wscript pcfile marker not found")
