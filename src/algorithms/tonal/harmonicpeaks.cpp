@@ -75,7 +75,6 @@ void HarmonicPeaks::compute() {
     throw EssentiaException("HarmonicPeaks: spectral peak frequencies must be greater than 0Hz");
   }
 
-  Real m0 = magnitudes[0];
   Real errorMin = abs(f0 - pitch);
   for (int i=1; i<int(frequencies.size()); ++i) {
     if (frequencies[i] < frequencies[i-1]) {
@@ -90,7 +89,6 @@ void HarmonicPeaks::compute() {
     Real error = abs(frequencies[i] - pitch);
     if (error <= errorMin) {
       f0 = frequencies[i];
-      m0 = magnitudes[i];
       errorMin = error;
     }
   }

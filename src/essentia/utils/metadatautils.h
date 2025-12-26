@@ -37,8 +37,8 @@ void pcmMetadata(const std::string& filename, int& sr, int& ch, int& bitrate) {
   }
 
   // (trick) create an audioloader to know the original samplerate
-  std::auto_ptr<streaming::Algorithm> audioloader(streaming::AlgorithmFactory::create("AudioLoader",
-                                                                                      "filename", filename));
+  std::unique_ptr<streaming::Algorithm> audioloader(streaming::AlgorithmFactory::create("AudioLoader",
+                                                                                        "filename", filename));
 
   sr = (int)streaming::lastTokenProduced<Real>(audioloader->output("sampleRate"));
   ch = streaming::lastTokenProduced<int>(audioloader->output("numberChannels"));
