@@ -61,6 +61,11 @@ Notes:
     files next to the CLI binary in the release asset.
   * `streaming_extractor` auto-selects output format by filename extension:
     `.json` emits JSON; `.yaml`/`.yml` emits YAML.
+  * Release assets include `svm_models/`; `svm.compute` defaults to true in the
+    bundled profiles (requires Gaia2 at build time).
+  * If built without Gaia2, SVM descriptors are skipped with a warning.
+  * The release workflow builds Gaia2 from source (Qt5 + Eigen) for macOS and
+    Windows so SVM descriptors are available by default.
   * macOS packaging installs `mbedtls` to bundle `libmbedcrypto.16.dylib` for
     FFmpeg dependency resolution.
   * The fork keeps C++17 compatibility fixes needed by MSYS2 g++ for non-integral

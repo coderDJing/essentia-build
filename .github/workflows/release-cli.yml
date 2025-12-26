@@ -63,6 +63,33 @@ jobs:
             mingw-w64-x86_64-libsamplerate
             mingw-w64-x86_64-libyaml
             mingw-w64-x86_64-taglib
+            mingw-w64-x86_64-qt5-base
+            mingw-w64-x86_64-eigen3
+
+      - name: Install Gaia2 (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        shell: msys2 {0}
+        run: |
+          set -euo pipefail
+          export MSYSTEM="MINGW64"
+          export PATH="/mingw64/bin:/usr/bin:$PATH"
+          export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
+          git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
+          python - <<'PY'
+from pathlib import Path
+path = Path("gaia/wscript")
+text = path.read_text()
+guard = ("    if not sys.platform.startswith('linux') and sys.platform != 'darwin':\n"
+         "        print('Please use the QtCreator project for building Gaia in Windows...')\n"
+         "        sys.exit(1)\n\n")
+if guard not in text:
+    raise SystemExit("gaia wscript guard not found")
+path.write_text(text.replace(guard, ""))
+PY
+          cd "gaia"
+          python "waf" configure --prefix="/mingw64" --mode=release
+          python "waf"
+          python "waf" install
 
       - name: Build (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
@@ -95,6 +122,7 @@ jobs:
           mkdir -p "$dist_dir"
           cp "$exe_path" "$dist_dir/essentia_streaming_extractor_music.exe"
           cp -R "src/examples/profiles" "$dist_dir/"
+          cp -R "src/examples/svm_models" "$dist_dir/"
           cp "COPYING.txt" "$dist_dir/"
 
           system_regex='^(KERNEL32\.dll|KERNELBASE\.dll|USER32\.dll|ADVAPI32\.dll|SHELL32\.dll|WS2_32\.dll|OLE32\.dll|OLEAUT32\.dll|GDI32\.dll|IMM32\.dll|COMDLG32\.dll|WINMM\.dll|VERSION\.dll|SHLWAPI\.dll|SETUPAPI\.dll|PSAPI\.dll|CRYPT32\.dll|BCRYPT\.dll|BCRYPTPRIMITIVES\.dll|SECUR32\.dll|IPHLPAPI\.dll|UXTHEME\.dll|MSIMG32\.dll|NTDLL\.dll|USERENV\.dll|NCRYPT\.dll|api-ms-win-.*\.dll|ucrtbase\.dll|msvcrt\.dll)$'
@@ -153,14 +181,28 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          brew install ffmpeg fftw libsamplerate libyaml taglib pkg-config mbedtls
+          brew install ffmpeg fftw libsamplerate libyaml taglib pkg-config mbedtls eigen qt@5
+
+      - name: Install Gaia2 (macOS)
+        if: ${{ startsWith(matrix.os, 'macos') }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          export PATH="$(brew --prefix qt@5)/bin:$PATH"
+          export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$(brew --prefix)/opt/eigen/share/pkgconfig"
+          git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
+          pushd "gaia"
+          python3 "waf" configure --prefix="$(brew --prefix)" --mode=release
+          python3 "waf"
+          python3 "waf" install
+          popd
 
       - name: Build (macOS)
         if: ${{ startsWith(matrix.os, 'macos') }}
         shell: bash
         run: |
           set -euo pipefail
-          export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig"
+          export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$(brew --prefix)/opt/eigen/share/pkgconfig"
           python3 waf configure --with-examples --mode=release
           python3 waf
 
@@ -176,6 +218,7 @@ jobs:
           mkdir -p "$dist_dir"
           cp "$bin_path" "$target_bin"
           cp -R "src/examples/profiles" "$dist_dir/"
+          cp -R "src/examples/svm_models" "$dist_dir/"
           cp "COPYING.txt" "$dist_dir/"
 
           resolve_dep() {

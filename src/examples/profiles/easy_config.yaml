@@ -16,7 +16,7 @@ shortSound: false # set to true when analyzing a sample less than 2s
 
 # change to true when svm models are trained
 svm:
-    compute: false
+    compute: true
 
 segmentation:
     compute: false

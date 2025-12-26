@@ -239,7 +239,13 @@ void compute(const string& audioFilename, const string& outputFilename,
 
  if (eqloud) {
    Pool stats = computeAggregation(eqloudPool, options, segments.size());
+#if HAVE_GAIA2
    if (options.value<Real>("svm.compute") != 0) addSVMDescriptors(stats);
+#else
+   if (options.value<Real>("svm.compute") != 0) {
+     cout << "Warning: Essentia was compiled without Gaia2 library, skipping SVM models" << endl;
+   }
+#endif
    outputToFile(stats, outputFilename, options);
    eqloudPool.remove("metadata.audio_properties.downmix");
  }
@@ -860,16 +866,16 @@ void outputToFile(Pool& pool, const string& outputFilename, const Pool& options)
 void addSVMDescriptors(Pool& pool) {
   cout << "Process step 7: SVM Models" << endl;
   //const char* svmModels[] = {}; // leave this empty if you don't have any SVM models
-  const char* svmModels[] = { "genre_tzanetakis", "genre_dortmund",
-                              "genre_electronica", "genre_rosamerica",
+  const char* svmModels[] = { "danceability",
+                              "genre_dortmund", "genre_electronic",
+                              "genre_rosamerica", "genre_tzanetakis",
+                              "mirex_ballroom",
                               "mood_acoustic", "mood_aggressive",
                               "mood_electronic", "mood_happy",
                               "mood_party", "mood_relaxed", "mood_sad",
-                              "perceptual_speed", "timbre",
-                              "culture", "gender", "live_studio",
-                              "mirex-moods", "ballroom",
-                              "voice_instrumental", "speech_music"
-  };
+                              "moods_mirex",
+                              "tonal_atonal", "voice_instrumental",
+                              "timbre", "culture", "gender" };
 
   string pathToSvmModels;
 

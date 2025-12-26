@@ -61,7 +61,7 @@ void setDefaultOptions(Pool& pool) {
   string silentFrames = "noise";
   int zeroPadding = 0;
   string windowType = "hann";
-  pool.set("svm.compute", false);
+  pool.set("svm.compute", true);
   int size1=1000, inc1=300, size2=600, inc2=50, cpw=5, minlength=10;
   pool.set("segmentation.compute", false);
   pool.set("segmentation.size1", size1);
