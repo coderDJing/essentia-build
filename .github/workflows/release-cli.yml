@@ -72,6 +72,7 @@ jobs:
         shell: msys2 {0}
         run: |
           set -euo pipefail
+          pacman -S --noconfirm --needed mingw-w64-x86_64-gcc mingw-w64-x86_64-binutils
           export MSYSTEM="MINGW64"
           export PATH="/mingw64/bin:/usr/bin:$PATH"
           export CC="/mingw64/bin/gcc"
