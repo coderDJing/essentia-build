@@ -25,7 +25,7 @@ jobs:
           - os: windows-latest
             target: windows-x64
             msystem: MINGW64
-          - os: macos-13
+          - os: macos-15-intel
             target: macos-x86_64
           - os: macos-14
             target: macos-arm64
@@ -153,7 +153,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          brew install ffmpeg fftw libsamplerate libyaml taglib pkg-config
+          brew install ffmpeg fftw libsamplerate libyaml taglib pkg-config mbedtls
 
       - name: Build (macOS)
         if: ${{ startsWith(matrix.os, 'macos') }}
@@ -183,6 +183,10 @@ jobs:
             if [[ "$dep" == @* ]]; then
               local base
               base="$(basename "$dep")"
+              if [ -f "$dist_dir/$base" ]; then
+                echo "$dist_dir/$base"
+                return
+              fi
               if [ -f "$brew_prefix/lib/$base" ]; then
                 echo "$brew_prefix/lib/$base"
                 return
@@ -219,8 +223,10 @@ jobs:
               fi
               if [ ! -f "$dest" ]; then
                 cp -L "$resolved" "$dest"
+                codesign --remove-signature "$dest" 2>/dev/null || true
                 install_name_tool -id "@executable_path/$base" "$dest" || true
               fi
+              codesign --remove-signature "$current" 2>/dev/null || true
               install_name_tool -change "$dep" "@executable_path/$base" "$current" || true
               already=0
               for seen in "${processed[@]}"; do

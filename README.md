@@ -42,7 +42,7 @@ CLI Releases (GitHub Actions)
 This fork includes a GitHub Actions workflow that builds the streaming extractor CLI for:
 
   * Windows x64 (MSYS2 + mingw-w64)
-  * macOS x86_64 (macos-13)
+  * macOS x86_64 (macos-15-intel)
   * macOS arm64 (macos-14)
 
 Release flow:
@@ -59,6 +59,8 @@ Notes:
 
   * The workflow builds with `--with-examples` and bundles required DLL/dylib
     files next to the CLI binary in the release asset.
+  * macOS packaging installs `mbedtls` to bundle `libmbedcrypto.16.dylib` for
+    FFmpeg dependency resolution.
   * The fork keeps C++17 compatibility fixes needed by MSYS2 g++ for non-integral
     static constants used in tempo tap headers.
 
