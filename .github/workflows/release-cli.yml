@@ -101,8 +101,8 @@ jobs:
                    "        sys.exit(1)\n\n")
           if guard not in text:
               raise SystemExit("gaia wscript guard not found")
-          path.write_text(text.replace(guard, ""))
-          text = path.read_text()
+          text = text.replace(guard, "")
+          text = text.replace("-std=c++11", "-std=c++14")
           if "elif sys.platform == 'darwin':" in text and "windows fallback for pkg-config" not in text:
               insert = (
                   "\n    else:\n"
@@ -132,7 +132,7 @@ jobs:
               if marker not in text:
                   raise SystemExit("gaia wscript pcfile marker not found")
               text = text.replace(marker, insert + marker)
-              path.write_text(text)
+          path.write_text(text)
           PY
           cd "gaia"
           win_path="$(cygpath -w /mingw64/bin);$(cygpath -w /usr/bin)"
@@ -247,6 +247,13 @@ jobs:
           export PATH="$(brew --prefix qt@5)/bin:$PATH"
           export PKG_CONFIG_PATH="$(brew --prefix)/lib/pkgconfig:$(brew --prefix)/share/pkgconfig:$(brew --prefix)/opt/eigen/share/pkgconfig"
           git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
+          python3 - <<'PY'
+          from pathlib import Path
+          path = Path("gaia/wscript")
+          text = path.read_text()
+          text = text.replace("-std=c++11", "-std=c++14")
+          path.write_text(text)
+          PY
           pushd "gaia"
           python3 "waf" configure --prefix="$(brew --prefix)" --mode=release
           python3 "waf"
