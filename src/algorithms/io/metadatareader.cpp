@@ -238,7 +238,7 @@ void MetadataReader::compute() {
   _track.get()   = f.tag()->track();
   _year.get()    = f.tag()->year();
 
-  _length.get()     = f.audioProperties()->length();
+  _length.get()     = f.audioProperties()->lengthInSeconds();
   _bitrate.get()    = f.audioProperties()->bitrate();
   _sampleRate.get() = f.audioProperties()->sampleRate();
   _channels.get()   = f.audioProperties()->channels();
@@ -306,7 +306,7 @@ AlgorithmStatus MetadataReader::process() {
     _track.push((int)f.tag()->track());
     _year.push((int)f.tag()->year());
 
-    _length.push((int)f.audioProperties()->length());
+    _length.push((int)f.audioProperties()->lengthInSeconds());
 
     int bitrate = f.audioProperties()->bitrate();
     // fix for taglib incorrectly returning the bitrate for wave files

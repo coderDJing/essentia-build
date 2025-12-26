@@ -111,6 +111,18 @@ extern "C" {
 #   define avformat_alloc_context av_alloc_format_context
 #endif
 
+#ifndef AV_INPUT_BUFFER_MIN_SIZE
+#  ifdef FF_MIN_BUFFER_SIZE
+#    define AV_INPUT_BUFFER_MIN_SIZE FF_MIN_BUFFER_SIZE
+#  endif
+#endif
+
+#ifndef AV_INPUT_BUFFER_PADDING_SIZE
+#  ifdef FF_INPUT_BUFFER_PADDING_SIZE
+#    define AV_INPUT_BUFFER_PADDING_SIZE FF_INPUT_BUFFER_PADDING_SIZE
+#  endif
+#endif
+
 
 // --- audioconvert
 

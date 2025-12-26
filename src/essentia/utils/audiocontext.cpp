@@ -148,8 +148,8 @@ int AudioContext::create(const std::string& filename,
 #endif
 
   // Minimum size for compressed (i.e. not pcm) files is FF_MIN_BUFFER_SIZE. However flac
-  // uses very big sizes which force us to set output buffer size to 4*FF_MIN_BUFFER_SIZE
-  // For PCM format outputBufsize can be set to sthg smaller than FF_MIN_BUFFER_SIZE, only
+  // uses very big sizes which force us to set output buffer size to 4*AV_INPUT_BUFFER_MIN_SIZE
+  // For PCM format outputBufsize can be set to sthg smaller than AV_INPUT_BUFFER_MIN_SIZE, only
   // take into account that when encoding the amount of data read from the input buffer is
   // buf_size * input_sample_size / output_sample_size.
 
@@ -178,8 +178,8 @@ int AudioContext::create(const std::string& filename,
     default:
       if (_codecCtx->frame_size <= 1) {
         // we could use these defaults, but it might not be desired
-        //_inputBufSize = FF_MIN_BUFFER_SIZE;
-        //_outputBufSize = FF_MIN_BUFFER_SIZE;
+        //_inputBufSize = AV_INPUT_BUFFER_MIN_SIZE;
+        //_outputBufSize = AV_INPUT_BUFFER_MIN_SIZE;
         //dataSize = 1;
 
         // so throw an exception instead
@@ -187,7 +187,7 @@ int AudioContext::create(const std::string& filename,
       }
 
       _inputBufSize = _codecCtx->frame_size*nCh*SAMPLE_SIZE_RATIO;
-      _outputBufSize = FF_MIN_BUFFER_SIZE;
+      _outputBufSize = AV_INPUT_BUFFER_MIN_SIZE;
       dataSize = _codecCtx->frame_size;
   }
 
@@ -220,8 +220,8 @@ int AudioContext::create(const std::string& filename,
 //    dataSize = _codecCtx->frame_size;
 //  }
 
-  // FF_INPUT_BUFFER_PADDING_SIZE is needed for some architectures
-  _inputBufSize += FF_INPUT_BUFFER_PADDING_SIZE;
+  // AV_INPUT_BUFFER_PADDING_SIZE is needed for some architectures
+  _inputBufSize += AV_INPUT_BUFFER_PADDING_SIZE;
 
   // allocate audio buffers
   _inputBuffer = (int16_t*)av_malloc(_inputBufSize);
@@ -250,7 +250,10 @@ void AudioContext::open() {
     throw EssentiaException("Could not open \"", _filename, "\"");
   }
 
-  avformat_write_header(_demuxCtx, /* AVDictionary **options */ NULL);
+  int headerResult = avformat_write_header(_demuxCtx, /* AVDictionary **options */ NULL);
+  if (headerResult < 0) {
+    throw EssentiaException("Error while writing audio header");
+  }
 
 
   _isOpen = true;
