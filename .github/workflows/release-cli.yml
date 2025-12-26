@@ -137,9 +137,30 @@ jobs:
           metric_path = Path("gaia/src/metrics/frozencosineangledistance.h")
           metric_text = metric_path.read_text()
           if "#ifndef M_PI" not in metric_text:
-              metric_text = metric_text.replace('#include "frozendistance.h"\\n',
-                  '#include "frozendistance.h"\\n\\n#include <cmath>\\n#ifndef M_PI\\n#define M_PI 3.14159265358979323846\\n#endif\\n')
-              metric_path.write_text(metric_text)
+              lines = metric_text.splitlines(True)
+              inserted = False
+              for i, line in enumerate(lines):
+                  if line.strip() == '#include "frozendistance.h"':
+                      if line.endswith("\r\n"):
+                          newline = "\r\n"
+                      elif line.endswith("\n"):
+                          newline = "\n"
+                      else:
+                          newline = "\n"
+                      insert_lines = [
+                          line,
+                          newline,
+                          '#include <cmath>' + newline,
+                          '#ifndef M_PI' + newline,
+                          '#define M_PI 3.14159265358979323846' + newline,
+                          '#endif' + newline,
+                      ]
+                      lines[i:i+1] = insert_lines
+                      inserted = True
+                      break
+              if not inserted:
+                  raise SystemExit("gaia M_PI insert point not found")
+              metric_path.write_text("".join(lines))
           PY
           cd "gaia"
           win_path="$(cygpath -w /mingw64/bin);$(cygpath -w /usr/bin)"
@@ -264,9 +285,30 @@ jobs:
           metric_path = Path("gaia/src/metrics/frozencosineangledistance.h")
           metric_text = metric_path.read_text()
           if "#ifndef M_PI" not in metric_text:
-              metric_text = metric_text.replace('#include "frozendistance.h"\\n',
-                  '#include "frozendistance.h"\\n\\n#include <cmath>\\n#ifndef M_PI\\n#define M_PI 3.14159265358979323846\\n#endif\\n')
-              metric_path.write_text(metric_text)
+              lines = metric_text.splitlines(True)
+              inserted = False
+              for i, line in enumerate(lines):
+                  if line.strip() == '#include "frozendistance.h"':
+                      if line.endswith("\r\n"):
+                          newline = "\r\n"
+                      elif line.endswith("\n"):
+                          newline = "\n"
+                      else:
+                          newline = "\n"
+                      insert_lines = [
+                          line,
+                          newline,
+                          '#include <cmath>' + newline,
+                          '#ifndef M_PI' + newline,
+                          '#define M_PI 3.14159265358979323846' + newline,
+                          '#endif' + newline,
+                      ]
+                      lines[i:i+1] = insert_lines
+                      inserted = True
+                      break
+              if not inserted:
+                  raise SystemExit("gaia M_PI insert point not found")
+              metric_path.write_text("".join(lines))
           PY
           pushd "gaia"
           python3 "waf" configure --prefix="$(brew --prefix)" --mode=release
