@@ -42,7 +42,7 @@ def options(opt):
 	opt.add_option('--no-msvc-lazy',action='store_false',help='lazily check msvc target environments',default=True,dest='msvc_lazy')
 class MSVCVersion(object):
 	def __init__(self,ver):
-		m=re.search('^(.*)\s+(\d+[.]\d+)',ver)
+		m=re.search(r'^(.*)\s+(\d+[.]\d+)',ver)
 		if m:
 			self.name=m.group(1)
 			self.number=float(m.group(2))

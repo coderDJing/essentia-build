@@ -79,7 +79,7 @@ class AudioLoader : public Algorithm {
 
  public:
   AudioLoader() : Algorithm(), _buffer(0),  _demuxCtx(0),
-	          _audioCtx(0), _audioCodec(0),
+                  _audioCtx(0), _audioCodec(0), _packet(),
 #if LIBAVCODEC_VERSION_INT >= AVCODEC_AUDIO_DECODE4
                   _decodedFrame(0),
 #endif

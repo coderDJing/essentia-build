@@ -218,7 +218,11 @@ void AudioLoader::openAudioFile(const string& filename) {
         E_DEBUG(EAlgorithm, "AudioLoader: no sample format conversion, using direct copy");
     }
 
+#if ESSENTIA_FFMPEG_NEW_API
+    av_packet_unref(&_packet);
+#else
     av_init_packet(&_packet);
+#endif
 
 #if LIBAVCODEC_VERSION_INT >= AVCODEC_AUDIO_DECODE4
     _decodedFrame = av_frame_alloc();
