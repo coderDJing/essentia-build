@@ -103,7 +103,10 @@ jobs:
               raise SystemExit("gaia wscript guard not found")
           text = text.replace(guard, "")
           text = text.replace("-std=c++11", "-std=c++14")
-          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations'")
+          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations', '-Wno-maybe-uninitialized'")
+          if "-DM_PI=" not in text:
+              text = text.replace("'-fvisibility=hidden' ]",
+                                  "'-fvisibility=hidden', '-DM_PI=3.14159265358979323846' ]")
           if "elif sys.platform == 'darwin':" in text and "windows fallback for pkg-config" not in text:
               insert = (
                   "\n    else:\n"
@@ -280,7 +283,10 @@ jobs:
           path = Path("gaia/wscript")
           text = path.read_text()
           text = text.replace("-std=c++11", "-std=c++14")
-          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations'")
+          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations', '-Wno-maybe-uninitialized'")
+          if "-DM_PI=" not in text:
+              text = text.replace("'-fvisibility=hidden' ]",
+                                  "'-fvisibility=hidden', '-DM_PI=3.14159265358979323846' ]")
           path.write_text(text)
           metric_path = Path("gaia/src/metrics/frozencosineangledistance.h")
           metric_text = metric_path.read_text()
