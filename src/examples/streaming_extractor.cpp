@@ -23,6 +23,17 @@
 #include <essentia/essentiautil.h>
 #include <essentia/stringutil.h>
 #include <essentia/scheduler/network.h>
+#if defined(_WIN32)
+#include <windows.h>
+#elif defined(__APPLE__)
+#include <mach-o/dyld.h>
+#include <unistd.h>
+#include <limits.h>
+#include <stdlib.h>
+#else
+#include <unistd.h>
+#include <limits.h>
+#endif
 
 // helper functions
 #include "streaming_extractorutils.h"
@@ -52,12 +63,56 @@ void computePanning(const string& audioFilename, Pool& neqloudPool, Pool& eqloud
                     Real startTime, Real endTime, const string& nspace = "");
 void computeHighlevel(Pool& pool, const Pool& options, const string& nspace = "");
 Pool computeAggregation(Pool& pool, const Pool& options, int segments=0);
-void addSVMDescriptors(Pool& pool);
+void addSVMDescriptors(Pool& pool, const string& svmModelsDir);
 void outputToFile(Pool& pool, const string& outputFilename, const Pool& options);
 
 static bool hasSuffix(const string& value, const string& suffix) {
   if (value.size() < suffix.size()) return false;
   return value.compare(value.size() - suffix.size(), suffix.size(), suffix) == 0;
+}
+
+static string joinPath(const string& left, const string& right) {
+  if (left.empty()) return right;
+  char last = left[left.size() - 1];
+  if (last == '/' || last == '\\') return left + right;
+  return left + "/" + right;
+}
+
+static string getExecutablePath() {
+#if defined(_WIN32)
+  char buffer[MAX_PATH];
+  DWORD size = GetModuleFileNameA(NULL, buffer, MAX_PATH);
+  if (size == 0 || size == MAX_PATH) return string();
+  return string(buffer, size);
+#elif defined(__APPLE__)
+  uint32_t size = 0;
+  _NSGetExecutablePath(NULL, &size);
+  if (size == 0) return string();
+  string buffer(size, '\0');
+  if (_NSGetExecutablePath(&buffer[0], &size) != 0) return string();
+  char resolved[PATH_MAX];
+  if (realpath(buffer.c_str(), resolved) != NULL) return string(resolved);
+  if (!buffer.empty() && buffer[buffer.size() - 1] == '\0') {
+    buffer.resize(buffer.size() - 1);
+  }
+  return buffer;
+#else
+  char buffer[PATH_MAX];
+  ssize_t size = readlink("/proc/self/exe", buffer, sizeof(buffer) - 1);
+  if (size <= 0) return string();
+  buffer[size] = '\0';
+  return string(buffer);
+#endif
+}
+
+static string getExecutableDir(const char* argv0) {
+  string path = getExecutablePath();
+  if (path.empty() && argv0 != NULL) path = argv0;
+  if (path.empty()) return string();
+  size_t pos = path.find_last_of("/\\");
+  if (pos == string::npos) return ".";
+  if (pos == 0) return path.substr(0, 1);
+  return path.substr(0, pos);
 }
 
 void usage() {
@@ -107,6 +162,7 @@ int main(int argc, char* argv[]) {
   } else if (hasSuffix(outputLower, ".yaml") || hasSuffix(outputLower, ".yml")) {
     options.set("outputJSON", false);
   }
+  string svmModelsDir = joinPath(getExecutableDir(argv[0]), "svm_models");
 
   // pool for storing results
   Pool neqloudPool; // non equal loudness pool
@@ -240,7 +296,7 @@ void compute(const string& audioFilename, const string& outputFilename,
  if (eqloud) {
    Pool stats = computeAggregation(eqloudPool, options, segments.size());
 #if HAVE_GAIA2
-   if (options.value<Real>("svm.compute") != 0) addSVMDescriptors(stats);
+   if (options.value<Real>("svm.compute") != 0) addSVMDescriptors(stats, svmModelsDir);
 #else
    if (options.value<Real>("svm.compute") != 0) {
      cout << "Warning: Essentia was compiled without Gaia2 library, skipping SVM models" << endl;
@@ -863,7 +919,7 @@ void outputToFile(Pool& pool, const string& outputFilename, const Pool& options)
 }
 
 
-void addSVMDescriptors(Pool& pool) {
+void addSVMDescriptors(Pool& pool, const string& svmModelsDir) {
   cout << "Process step 7: SVM Models" << endl;
   //const char* svmModels[] = {}; // leave this empty if you don't have any SVM models
   const char* svmModels[] = { "danceability",
@@ -877,17 +933,9 @@ void addSVMDescriptors(Pool& pool) {
                               "tonal_atonal", "voice_instrumental",
                               "timbre", "culture", "gender" };
 
-  string pathToSvmModels;
-
-#ifdef OS_WIN32
-  pathToSvmModels = "svm_models\\";
-#else
-  pathToSvmModels = "svm_models/";
-#endif
-
   for (int i=0; i<(int)ARRAY_SIZE(svmModels); i++) {
     //cout << "adding HL desc: " << svmModels[i] << endl;
-    string modelFilename = pathToSvmModels + string(svmModels[i]) + ".history";
+    string modelFilename = joinPath(svmModelsDir, string(svmModels[i]) + ".history");
     standard::Algorithm* svm = standard::AlgorithmFactory::create("GaiaTransform",
                                                                   "history", modelFilename);
 

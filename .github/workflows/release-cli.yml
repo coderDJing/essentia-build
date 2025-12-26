@@ -76,16 +76,16 @@ jobs:
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
           git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
           python - <<'PY'
-from pathlib import Path
-path = Path("gaia/wscript")
-text = path.read_text()
-guard = ("    if not sys.platform.startswith('linux') and sys.platform != 'darwin':\n"
-         "        print('Please use the QtCreator project for building Gaia in Windows...')\n"
-         "        sys.exit(1)\n\n")
-if guard not in text:
-    raise SystemExit("gaia wscript guard not found")
-path.write_text(text.replace(guard, ""))
-PY
+          from pathlib import Path
+          path = Path("gaia/wscript")
+          text = path.read_text()
+          guard = ("    if not sys.platform.startswith('linux') and sys.platform != 'darwin':\n"
+                   "        print('Please use the QtCreator project for building Gaia in Windows...')\n"
+                   "        sys.exit(1)\n\n")
+          if guard not in text:
+              raise SystemExit("gaia wscript guard not found")
+          path.write_text(text.replace(guard, ""))
+          PY
           cd "gaia"
           python "waf" configure --prefix="/mingw64" --mode=release
           python "waf"

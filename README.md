@@ -62,7 +62,8 @@ Notes:
   * `streaming_extractor` auto-selects output format by filename extension:
     `.json` emits JSON; `.yaml`/`.yml` emits YAML.
   * Release assets include `svm_models/`; `svm.compute` defaults to true in the
-    bundled profiles (requires Gaia2 at build time).
+    bundled profiles (requires Gaia2 at build time). The CLI resolves
+    `svm_models` relative to the executable, so it works from any working dir.
   * If built without Gaia2, SVM descriptors are skipped with a warning.
   * The release workflow builds Gaia2 from source (Qt5 + Eigen) for macOS and
     Windows so SVM descriptors are available by default.
