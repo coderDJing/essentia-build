@@ -103,6 +103,7 @@ jobs:
               raise SystemExit("gaia wscript guard not found")
           text = text.replace(guard, "")
           text = text.replace("-std=c++11", "-std=c++14")
+          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations'")
           if "elif sys.platform == 'darwin':" in text and "windows fallback for pkg-config" not in text:
               insert = (
                   "\n    else:\n"
@@ -133,6 +134,12 @@ jobs:
                   raise SystemExit("gaia wscript pcfile marker not found")
               text = text.replace(marker, insert + marker)
           path.write_text(text)
+          metric_path = Path("gaia/src/metrics/frozencosineangledistance.h")
+          metric_text = metric_path.read_text()
+          if "#ifndef M_PI" not in metric_text:
+              metric_text = metric_text.replace('#include "frozendistance.h"\\n',
+                  '#include "frozendistance.h"\\n\\n#include <cmath>\\n#ifndef M_PI\\n#define M_PI 3.14159265358979323846\\n#endif\\n')
+              metric_path.write_text(metric_text)
           PY
           cd "gaia"
           win_path="$(cygpath -w /mingw64/bin);$(cygpath -w /usr/bin)"
@@ -252,7 +259,14 @@ jobs:
           path = Path("gaia/wscript")
           text = path.read_text()
           text = text.replace("-std=c++11", "-std=c++14")
+          text = text.replace("'-Wall'", "'-Wall', '-Wno-deprecated-declarations'")
           path.write_text(text)
+          metric_path = Path("gaia/src/metrics/frozencosineangledistance.h")
+          metric_text = metric_path.read_text()
+          if "#ifndef M_PI" not in metric_text:
+              metric_text = metric_text.replace('#include "frozendistance.h"\\n',
+                  '#include "frozendistance.h"\\n\\n#include <cmath>\\n#ifndef M_PI\\n#define M_PI 3.14159265358979323846\\n#endif\\n')
+              metric_path.write_text(metric_text)
           PY
           pushd "gaia"
           python3 "waf" configure --prefix="$(brew --prefix)" --mode=release
