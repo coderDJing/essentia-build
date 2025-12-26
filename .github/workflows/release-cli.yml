@@ -74,6 +74,10 @@ jobs:
           set -euo pipefail
           export MSYSTEM="MINGW64"
           export PATH="/mingw64/bin:/usr/bin:$PATH"
+          export CC="/mingw64/bin/gcc"
+          export CXX="/mingw64/bin/g++"
+          export AR="/mingw64/bin/ar"
+          export RANLIB="/mingw64/bin/ranlib"
           export PKG_CONFIG_PATH="/mingw64/lib/pkgconfig"
           git clone --depth 1 "https://github.com/MTG/gaia.git" "gaia"
           python - <<'PY'
@@ -88,7 +92,7 @@ jobs:
           path.write_text(text.replace(guard, ""))
           PY
           cd "gaia"
-          python "waf" configure --prefix="/mingw64" --mode=release
+          python "waf" configure --prefix="/mingw64" --mode=release --check-c-compiler=gcc --check-cxx-compiler=g++
           python "waf"
           python "waf" install
 
