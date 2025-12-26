@@ -97,7 +97,7 @@ jobs:
           cp -R "src/examples/profiles" "$dist_dir/"
           cp "COPYING.txt" "$dist_dir/"
 
-          system_regex='^(KERNEL32\.dll|KERNELBASE\.dll|USER32\.dll|ADVAPI32\.dll|SHELL32\.dll|WS2_32\.dll|OLE32\.dll|OLEAUT32\.dll|GDI32\.dll|IMM32\.dll|COMDLG32\.dll|WINMM\.dll|VERSION\.dll|SHLWAPI\.dll|SETUPAPI\.dll|PSAPI\.dll|CRYPT32\.dll|BCRYPT\.dll|BCRYPTPRIMITIVES\.dll|SECUR32\.dll|IPHLPAPI\.dll|UXTHEME\.dll|MSIMG32\.dll|NTDLL\.dll|USERENV\.dll|api-ms-win-.*\.dll|ucrtbase\.dll|msvcrt\.dll)$'
+          system_regex='^(KERNEL32\.dll|KERNELBASE\.dll|USER32\.dll|ADVAPI32\.dll|SHELL32\.dll|WS2_32\.dll|OLE32\.dll|OLEAUT32\.dll|GDI32\.dll|IMM32\.dll|COMDLG32\.dll|WINMM\.dll|VERSION\.dll|SHLWAPI\.dll|SETUPAPI\.dll|PSAPI\.dll|CRYPT32\.dll|BCRYPT\.dll|BCRYPTPRIMITIVES\.dll|SECUR32\.dll|IPHLPAPI\.dll|UXTHEME\.dll|MSIMG32\.dll|NTDLL\.dll|USERENV\.dll|NCRYPT\.dll|api-ms-win-.*\.dll|ucrtbase\.dll|msvcrt\.dll)$'
           queue=("$exe_path")
           processed=()
 
@@ -111,6 +111,15 @@ jobs:
                 continue
               fi
               dep_path=""
+              for sys_dir in "/c/Windows/System32" "/c/Windows/SysWOW64"; do
+                if [ -f "$sys_dir/$dep" ]; then
+                  dep_path="$sys_dir/$dep"
+                  break
+                fi
+              done
+              if [ -n "${dep_path:-}" ]; then
+                continue
+              fi
               if [ -f "$dist_dir/$dep" ]; then
                 dep_path="$dist_dir/$dep"
               else
