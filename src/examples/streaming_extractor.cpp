@@ -51,7 +51,8 @@ using namespace essentia::scheduler;
 
 void computeSegments(const string& audioFilename, Pool& neqloudPool, Pool& eqloudPool, const Pool& options);
 void compute(const string& audioFilename, const string& outputFilename,
-             Pool& neqloudPool, Pool& eqloudPool, const Pool& options);
+             Pool& neqloudPool, Pool& eqloudPool, const Pool& options,
+             const string& svmModelsDir);
 
 void computeReplayGain(const string& audioFilename, Pool& neqloudPool, Pool& eqloudPool, const Pool& options);
 void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqloudPool, const Pool& options,
@@ -177,7 +178,7 @@ int main(int argc, char* argv[]) {
   }
 
   try {
-    compute(audioFilename, outputFilename, neqloudPool, eqloudPool, options);
+    compute(audioFilename, outputFilename, neqloudPool, eqloudPool, options, svmModelsDir);
   }
   catch (EssentiaException& e) {
     cout << e.what() << endl;
@@ -190,7 +191,8 @@ int main(int argc, char* argv[]) {
 }
 
 void compute(const string& audioFilename, const string& outputFilename,
-             Pool& neqloudPool, Pool& eqloudPool, const Pool& options) {
+             Pool& neqloudPool, Pool& eqloudPool, const Pool& options,
+             const string& svmModelsDir) {
 
   bool neqloud = options.value<Real>("nequalLoudness") != 0;
   bool eqloud = options.value<Real>("equalLoudness") != 0;

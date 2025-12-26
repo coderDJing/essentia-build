@@ -111,14 +111,18 @@
 // some Windows peculiarities that need to be fixed
 #ifdef OS_WIN32
 
+#ifdef _MSC_VER
   #pragma warning (disable : 4251 4275) // disable the DLL warnings...
   #pragma warning (disable : 4244 4305 4267) // disable float<=>double conversion warnings
   #pragma warning (disable : 4996) // XYZ was declared deprecated
   #pragma warning (disable : 4146) // MersenneTwister.h:273 unary minus operator applied to unsigned type, result still unsigned
   #pragma warning (disable : 4355) // this used in class initialization, but we do it in a safe way
+#endif
 
   // tell microsoft we would like to use std::min and std::max
+#ifndef NOMINMAX
   #define NOMINMAX
+#endif
 
   typedef unsigned int uint;
 
