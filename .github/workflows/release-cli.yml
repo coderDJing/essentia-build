@@ -65,6 +65,7 @@ jobs:
             mingw-w64-x86_64-taglib
             mingw-w64-x86_64-qt5-base
             mingw-w64-x86_64-eigen3
+            git
 
       - name: Install Gaia2 (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
