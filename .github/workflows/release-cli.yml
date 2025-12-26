@@ -102,6 +102,38 @@ jobs:
           if guard not in text:
               raise SystemExit("gaia wscript guard not found")
           path.write_text(text.replace(guard, ""))
+          text = path.read_text()
+          if "elif sys.platform == 'darwin':" in text and "windows fallback for pkg-config" not in text:
+              insert = """
+    else:
+        # windows fallback for pkg-config
+        opts = { 'prefix': prefix,
+             'qtlibdir': '/mingw64/lib',
+             'qtincludedir': '-I' + ' -I'.join(conf.env['INCLUDES_QT5CORE']),
+             'version': VERSION,
+             'tbblib': tbblib,
+             }
+
+        pcfile = '''prefix=%(prefix)s
+        libdir=${prefix}/lib
+        includedir=${prefix}/include
+        qtlibdir=%(qtlibdir)s
+        qtincludes=%(qtincludedir)s
+
+        Name: libgaia2
+        Description: A library for doing similarity in semimetric spaces
+        Version: %(version)s
+        Requires.private: eigen3
+        Libs: -L${libdir} -L${qtlibdir} -lgaia2 -lQt5Core -lQt5Concurrent -lyaml %(tbblib)s
+        Cflags: -I${includedir} ${qtincludes}
+        ''' % opts
+
+"""
+              marker = "\n\n    pcfile = '\\n'.join([ l.strip() for l in pcfile.split('\\n') ])\n"
+              if marker not in text:
+                  raise SystemExit("gaia wscript pcfile marker not found")
+              text = text.replace(marker, insert + marker)
+              path.write_text(text)
           PY
           cd "gaia"
           win_path="$(cygpath -w /mingw64/bin);$(cygpath -w /usr/bin)"
