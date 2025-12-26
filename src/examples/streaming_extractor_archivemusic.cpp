@@ -316,7 +316,8 @@ void computeStep2(const string& audioFilename, Pool& pool,
   // check if we processed enough audio for it to be useful, in particular did
   // we manage to get an estimation for the loudness (2 seconds required)
   try {
-    pool.value<vector<Real> >(llspace + "loudness")[0];
+    const Real loudnessCheck = pool.value<vector<Real> >(llspace + "loudness")[0];
+    (void)loudnessCheck;
   }
   catch (EssentiaException&) {
     cout << "ERROR: File is too short (< 2sec)... Aborting..." << endl;

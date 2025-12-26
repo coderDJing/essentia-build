@@ -31,7 +31,6 @@ void FreesoundLowlevelDescriptors::createNetwork(SourceBase& source, Pool& pool)
   AlgorithmFactory& factory = AlgorithmFactory::instance();
 
 
-  Real sampleRate = 44100;
   int frameSize =   2048;
   int hopSize =     1024;
   int zeroPadding = 0;

@@ -102,16 +102,16 @@ Pool FreesoundExtractor::computeAggregation(Pool& pool){
   int statsSize = int(sizeof(defaultStats)/sizeof(defaultStats[0]));
 
   if(!pool.contains<vector<Real> >("rhythm.beats_loudness")){
-    for (uint i=0; i<statsSize; i++)
+    for (int i=0; i<statsSize; i++)
         poolStats.set(string("rhythm.beats_loudness.")+defaultStats[i],0); 
     }
   if(!pool.contains<vector<vector<Real> > >("rhythm.beats_loudness_band_ratio"))
-    for (uint i=0; i<statsSize; i++) 
+    for (int i=0; i<statsSize; i++) 
       poolStats.set(string("rhythm.beats_loudness_band_ratio.")+defaultStats[i],
         arrayToVector<Real>(emptyVector));
   else if (pool.value<vector<vector<Real> > >("rhythm.beats_loudness_band_ratio").size()<2){
       poolStats.remove(string("rhythm.beats_loudness_band_ratio"));
-      for (uint i=0; i<statsSize; i++) {
+      for (int i=0; i<statsSize; i++) {
         if(i==1 || i==6 || i==7)// var, dvar and dvar2 are 0
           poolStats.set(string("rhythm.beats_loudness_band_ratio.")+defaultStats[i],
               arrayToVector<Real>(emptyVector));
