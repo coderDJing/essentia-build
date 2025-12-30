@@ -73,6 +73,8 @@ Notes:
     static constants used in tempo tap headers.
   * The streaming extractor wires `lowlevel.dynamic_complexity` into the pool
     so SVM high-level models have all required descriptors.
+  * The streaming extractor respects equal/non-equal loudness options so
+    `tonal.tuning_frequency` is stored before tonal midlevel stages.
 
 
 Versions

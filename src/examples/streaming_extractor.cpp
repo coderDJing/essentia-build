@@ -485,10 +485,6 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
   bool eqloud =  options.value<Real>("equalLoudness")  != 0;
   bool shortsound = options.value<Real>("shortSound")  != 0;
 
-  eqloud = true;
-  neqloud = false;
-  shortsound = true;
-
   if (eqloud) {
     replayGain = eqloudPool.value<Real>("metadata.audio_properties.replay_gain");
     downmix = eqloudPool.value<string>("metadata.audio_properties.downmix");
