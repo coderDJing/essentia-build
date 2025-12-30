@@ -531,8 +531,8 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
     if (options.value<Real>("rhythm.compute") != 0) {
       Algorithm* rhythmExtractor = factory.create("RhythmExtractor2013");
       rhythmExtractor->configure("method", options.value<string>("rhythm.method"),
-                                 "maxTempo", options.value<Real>("rhythm.maxTempo"),
-                                 "minTempo", options.value<Real>("rhythm.minTempo"));
+                                 "maxTempo", int(options.value<Real>("rhythm.maxTempo")),
+                                 "minTempo", int(options.value<Real>("rhythm.minTempo")));
 
       // Outdated rhythm extraction algorithm
       //Algorithm* rhythmExtractor = factory.create("RhythmExtractor");
@@ -611,8 +611,8 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
     if (options.value<Real>("rhythm.compute") != 0) {
       Algorithm* rhythmExtractor = factory.create("RhythmExtractor2013");
       rhythmExtractor->configure("method", options.value<string>("rhythm.method"),
-                                 "maxTempo", options.value<Real>("rhythm.maxTempo"),
-                                 "minTempo", options.value<Real>("rhythm.minTempo"));
+                                 "maxTempo", int(options.value<Real>("rhythm.maxTempo")),
+                                 "minTempo", int(options.value<Real>("rhythm.minTempo")));
 
       // Outdated rhythm extraction algorithm
       //Algorithm* rhythmExtractor = factory.create("RhythmExtractor");
