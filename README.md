@@ -75,6 +75,10 @@ Notes:
     so SVM high-level models have all required descriptors.
   * The streaming extractor respects equal/non-equal loudness options so
     `tonal.tuning_frequency` is stored before tonal midlevel stages.
+  * The streaming extractor adds `rhythm.danceability` and aligns BPM histogram
+    keys with SVM expectations (while keeping legacy aliases).
+  * The streaming extractor backfills missing BPM histogram and danceability
+    rhythm descriptors to keep SVM evaluation from crashing.
 
 
 Versions

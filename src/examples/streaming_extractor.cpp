@@ -560,17 +560,27 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
       Algorithm* bpmhist = factory.create("BpmHistogramDescriptors");
       connect(rhythmExtractor->output("bpmIntervals"), bpmhist->input("bpmIntervals"));
       connectSingleValue(bpmhist->output("firstPeakBPM"),     neqloudPool, rhythmspace + "first_peak_bpm");
+      connectSingleValue(bpmhist->output("firstPeakBPM"),     neqloudPool, rhythmspace + "bpm_histogram_first_peak");
       connectSingleValue(bpmhist->output("firstPeakWeight"),  neqloudPool, rhythmspace + "first_peak_weight");
+      connectSingleValue(bpmhist->output("firstPeakWeight"),  neqloudPool, rhythmspace + "bpm_histogram_first_peak_weight");
       connectSingleValue(bpmhist->output("firstPeakSpread"),  neqloudPool, rhythmspace + "first_peak_spread");
+      connectSingleValue(bpmhist->output("firstPeakSpread"),  neqloudPool, rhythmspace + "bpm_histogram_first_peak_spread");
       connectSingleValue(bpmhist->output("secondPeakBPM"),    neqloudPool, rhythmspace + "second_peak_bpm");
+      connectSingleValue(bpmhist->output("secondPeakBPM"),    neqloudPool, rhythmspace + "bpm_histogram_second_peak");
       connectSingleValue(bpmhist->output("secondPeakWeight"), neqloudPool, rhythmspace + "second_peak_weight");
+      connectSingleValue(bpmhist->output("secondPeakWeight"), neqloudPool, rhythmspace + "bpm_histogram_second_peak_weight");
       connectSingleValue(bpmhist->output("secondPeakSpread"), neqloudPool, rhythmspace + "second_peak_spread");
+      connectSingleValue(bpmhist->output("secondPeakSpread"), neqloudPool, rhythmspace + "bpm_histogram_second_peak_spread");
 
       // Onset Detection
       Algorithm* onset = factory.create("OnsetRate");
       connect(neqloudSource, onset->input("signal"));
       connect(onset->output("onsetTimes"), neqloudPool, rhythmspace + "onset_times");
       connect(onset->output("onsetRate"), NOWHERE ); //pool, rhythmspace + "onset_rate"); // this is done later
+
+      Algorithm* danceability = factory.create("Danceability");
+      connect(neqloudSource, danceability->input("signal"));
+      connectSingleValue(danceability->output("danceability"), neqloudPool, rhythmspace + "danceability");
     }
 
     Algorithm* dc = factory.create("DynamicComplexity");
@@ -628,17 +638,27 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
       Algorithm* bpmhist = factory.create("BpmHistogramDescriptors");
       connect(rhythmExtractor->output("bpmIntervals"), bpmhist->input("bpmIntervals"));
       connectSingleValue(bpmhist->output("firstPeakBPM"),     eqloudPool, rhythmspace + "first_peak_bpm");
+      connectSingleValue(bpmhist->output("firstPeakBPM"),     eqloudPool, rhythmspace + "bpm_histogram_first_peak");
       connectSingleValue(bpmhist->output("firstPeakWeight"),  eqloudPool, rhythmspace + "first_peak_weight");
+      connectSingleValue(bpmhist->output("firstPeakWeight"),  eqloudPool, rhythmspace + "bpm_histogram_first_peak_weight");
       connectSingleValue(bpmhist->output("firstPeakSpread"),  eqloudPool, rhythmspace + "first_peak_spread");
+      connectSingleValue(bpmhist->output("firstPeakSpread"),  eqloudPool, rhythmspace + "bpm_histogram_first_peak_spread");
       connectSingleValue(bpmhist->output("secondPeakBPM"),    eqloudPool, rhythmspace + "second_peak_bpm");
+      connectSingleValue(bpmhist->output("secondPeakBPM"),    eqloudPool, rhythmspace + "bpm_histogram_second_peak");
       connectSingleValue(bpmhist->output("secondPeakWeight"), eqloudPool, rhythmspace + "second_peak_weight");
+      connectSingleValue(bpmhist->output("secondPeakWeight"), eqloudPool, rhythmspace + "bpm_histogram_second_peak_weight");
       connectSingleValue(bpmhist->output("secondPeakSpread"), eqloudPool, rhythmspace + "second_peak_spread");
+      connectSingleValue(bpmhist->output("secondPeakSpread"), eqloudPool, rhythmspace + "bpm_histogram_second_peak_spread");
 
       // Onset Detection
       Algorithm* onset = factory.create("OnsetRate");
       connect(eqloudSource, onset->input("signal"));
       connect(onset->output("onsetTimes"), eqloudPool, rhythmspace + "onset_times");
       connect(onset->output("onsetRate"), NOWHERE ); //pool, rhythmspace + "onset_rate"); // this is done later
+
+      Algorithm* danceability = factory.create("Danceability");
+      connect(eqloudSource, danceability->input("signal"));
+      connectSingleValue(danceability->output("danceability"), eqloudPool, rhythmspace + "danceability");
     }
 
     Algorithm* dc = factory.create("DynamicComplexity");

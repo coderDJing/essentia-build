@@ -44,6 +44,20 @@ void PostProcess(Pool& pool, const Pool& options, const string& nspace) {
       pool.add(rhythmspace + "beats_loudness", Real(0.0));
     if (find(descNames.begin(), descNames.end(), rhythmspace + "beats_loudness_band_ratio") == descNames.end())
       pool.add(rhythmspace + "beats_loudness_band_Ratio", vector<Real>());
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_first_peak") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_first_peak", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_first_peak_weight") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_first_peak_weight", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_first_peak_spread") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_first_peak_spread", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_second_peak") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_second_peak", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_second_peak_weight") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_second_peak_weight", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "bpm_histogram_second_peak_spread") == descNames.end())
+      pool.set(rhythmspace + "bpm_histogram_second_peak_spread", 0.0);
+    if (find(descNames.begin(), descNames.end(), rhythmspace + "danceability") == descNames.end())
+      pool.set(rhythmspace + "danceability", 0.0);
     //if (find(descNames.begin(), descNames.end(), rhythmspace + "rubato_start") == descNames.end())
     //  pool.set(rhythmspace + "rubato_start", vector<Real>(0));
     //if (find(descNames.begin(), descNames.end(), rhythmspace + "rubato_stop") == descNames.end())
