@@ -81,11 +81,41 @@ void LowLevelSpectral(SourceBase& input, Pool& pool, const Pool& options, const 
   connect(zcr->output("zeroCrossingRate"), pool, llspace + "zerocrossingrate");
 
 
-  // MFCC
-  Algorithm* mfcc = factory.create("MFCC");
+  // MelBands and MFCC
+  uint nMelBands = 40;
+  Algorithm* mfcc = factory.create("MFCC",
+                                   "numberBands", nMelBands);
   connect(spec->output("spectrum"), mfcc->input("spectrum"));
-  connect(mfcc->output("bands"), NOWHERE);
+  connect(mfcc->output("bands"), pool, llspace + "melbands");
   connect(mfcc->output("mfcc"), pool, llspace + "mfcc");
+
+  // Spectral MelBands Central Moments Statistics
+  Algorithm* mels_cm = factory.create("CentralMoments",
+                                      "range", nMelBands-1);
+  Algorithm* mels_ds = factory.create("DistributionShape");
+  connect(mfcc->output("bands"), mels_cm->input("array"));
+  connect(mels_cm->output("centralMoments"), mels_ds->input("centralMoments"));
+  connect(mels_ds->output("kurtosis"), pool, llspace + "melbands_kurtosis");
+  connect(mels_ds->output("spread"), pool, llspace + "melbands_spread");
+  connect(mels_ds->output("skewness"), pool, llspace + "melbands_skewness");
+
+  // ERBBands and GFCC
+  uint nErbBands = 40;
+  Algorithm* gfcc = factory.create("GFCC",
+                                   "numberBands", nErbBands);
+  connect(spec->output("spectrum"), gfcc->input("spectrum"));
+  connect(gfcc->output("bands"), pool, llspace + "erbbands");
+  connect(gfcc->output("gfcc"), pool, llspace + "gfcc");
+
+  // Spectral ERBBands Central Moments Statistics
+  Algorithm* erbs_cm = factory.create("CentralMoments",
+                                      "range", nErbBands-1);
+  Algorithm* erbs_ds = factory.create("DistributionShape");
+  connect(gfcc->output("bands"), erbs_cm->input("array"));
+  connect(erbs_cm->output("centralMoments"), erbs_ds->input("centralMoments"));
+  connect(erbs_ds->output("kurtosis"), pool, llspace + "erbbands_kurtosis");
+  connect(erbs_ds->output("spread"), pool, llspace + "erbbands_spread");
+  connect(erbs_ds->output("skewness"), pool, llspace + "erbbands_skewness");
 
   // Spectral Decrease
   Algorithm* square = factory.create("UnaryOperator", "type", "square");
@@ -304,6 +334,8 @@ void LowLevelSpectralEqLoud(SourceBase& input, Pool& pool, const Pool& options, 
                                  "staticDistribution", 0.15);
 
   connect(spec->output("spectrum"), sc->input("spectrum"));
+  connect(sc->output("spectralContrast"), pool, llspace + "spectral_contrast_coeffs");
+  connect(sc->output("spectralValley"), pool, llspace + "spectral_contrast_valleys");
   connect(sc->output("spectralContrast"), pool, llspace + "sccoeffs");
   connect(sc->output("spectralValley"), pool, llspace + "scvalleys");
 }

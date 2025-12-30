@@ -52,7 +52,7 @@ lowlevel:
     zeroPadding:  0
     silentFrames: 'noise'
     windowType:  'blackmanharris62'
-    stats: [ "mean", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
+    stats: [ "mean", "median", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
     mfccStats: [ "mean", "cov", "icov" ]
 
 # average loudness options (average_loudness)
@@ -80,7 +80,7 @@ rhythm:
     hopSize:      256
     frameSize:   1024
     frameHop:    1024
-    stats: [ "mean", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
+    stats: [ "mean", "median", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
 
 # tonal extractor options (chords_changes_rate, chords_number_rate,
 #                          chords_strength, key_strength,
@@ -96,12 +96,12 @@ tonal:
     zeroPadding:    0
     silentFrames: 'noise'
     windowType:  'blackmanharris62'
-    stats: [ "mean", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
+    stats: [ "mean", "median", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
 
 sfx: # pitch_max_to_total, pitch_min_to_total, pitch_centroid,
      # pitch_after_max_before_max_energy_ratio,
     compute: true
-    stats: [ "mean", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
+    stats: [ "mean", "median", "var", "min", "max", "dmean", "dmean2", "dvar", "dvar2" ]
 
 # sfx not available at the moment...
 # (temporal_decrease, temporal_kurtosis, temporal_skewness

@@ -855,7 +855,8 @@ Pool computeAggregation(Pool& pool, const Pool& options, int nSegments) {
   map<string, vector<string> > exceptions;
   const vector<string>& descNames = pool.descriptorNames();
   for (int i=0; i<(int)descNames.size(); i++) {
-    if (descNames[i].find("lowlevel.mfcc") != string::npos) {
+    if (descNames[i].find("lowlevel.mfcc") != string::npos ||
+        descNames[i].find("lowlevel.gfcc") != string::npos) {
       exceptions[descNames[i]] = options.value<vector<string> >("lowlevel.mfccStats");
       continue;
     }
