@@ -71,6 +71,8 @@ Notes:
     FFmpeg dependency resolution.
   * The fork keeps C++17 compatibility fixes needed by MSYS2 g++ for non-integral
     static constants used in tempo tap headers.
+  * The streaming extractor wires `lowlevel.dynamic_complexity` into the pool
+    so SVM high-level models have all required descriptors.
 
 
 Versions

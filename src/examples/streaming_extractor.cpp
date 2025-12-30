@@ -576,6 +576,11 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
       connect(onset->output("onsetTimes"), neqloudPool, rhythmspace + "onset_times");
       connect(onset->output("onsetRate"), NOWHERE ); //pool, rhythmspace + "onset_rate"); // this is done later
     }
+
+    Algorithm* dc = factory.create("DynamicComplexity");
+    connect(neqloudSource, dc->input("signal"));
+    connect(dc->output("dynamicComplexity"), neqloudPool, llspace + "dynamic_complexity");
+    dc->output("loudness") >> NOWHERE;
   }
 
   if (eqloud) {
@@ -639,6 +644,11 @@ void computeLowLevel(const string& audioFilename, Pool& neqloudPool, Pool& eqlou
       connect(onset->output("onsetTimes"), eqloudPool, rhythmspace + "onset_times");
       connect(onset->output("onsetRate"), NOWHERE ); //pool, rhythmspace + "onset_rate"); // this is done later
     }
+
+    Algorithm* dc = factory.create("DynamicComplexity");
+    connect(eqloudSource, dc->input("signal"));
+    connect(dc->output("dynamicComplexity"), eqloudPool, llspace + "dynamic_complexity");
+    dc->output("loudness") >> NOWHERE;
   }
 
   cout << "Process step 2: Low Level" << endl;
